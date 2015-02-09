@@ -21,7 +21,7 @@ class CreateDBBusLocationTable extends Migration {
 			$table->float('longitude');
 			$table->foreign('bus_id')->references('id')->on('dbbus');
 			$table->dateTime('timestamp');
-			
+			$table->timestamps();
 		});
 	}
 
