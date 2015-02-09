@@ -45,7 +45,7 @@ class BusLocation
     /* -------------------------------------------------------------------------
      * Basic functions
      */
-    public function __construct(string $_registration, DateTime $timestamp, float $latitude, float $longitude)
+    public function __construct($_registration, $latitude, $longitude, $timestamp)
     {
         //TODO REFACTOR Remove Bus object and use Registration Number from Bus object instead.
         

@@ -1,11 +1,12 @@
 <?php
 
+use Carbon\Carbon;
 class BusLocationController extends \BaseController {
 
     /* -------------------------------------------------------------------------
      * Const
      */
-    const BUSLOCATION_CAHCHE_EXPIRATION           = 10;
+    const BUSLOCATION_CACHE_EXPIRATION            = 10;
     const MAX_BUS_VIEW_RADIUS                     = 10000;
     
     /**
@@ -40,7 +41,7 @@ class BusLocationController extends \BaseController {
         $redis                              = Redis::connection();
        
         $registration                       = Request::get('registration');
-        $dbBus                              = DBBus::where('registration', '=', $registration)->firstOrFail();
+        $dbBus                              = DBBus::where('registration', $registration)->firstOrFail();
         
         $dbBusLocation                      = new DBBusLocation;
         $dbBusLocation->registration        = Request::get('registration');
@@ -53,7 +54,7 @@ class BusLocationController extends \BaseController {
         $blBusLocation                      = new BusLocation($registration, Request::get('latitude'), Request::get('longitude'), Request::get('timestamp'));
         
         //Save to the MEMCACHED
-        $expiresAt = Carbon::now()->addMinutes(BUSLOCATION_CAHCHE_EXPIRATION);
+        $expiresAt = Carbon::now()->addMinutes(self::BUSLOCATION_CACHE_EXPIRATION);
         if(Cache::has("Location-" . $registration))
         {
             //Remove the old one from cache and insert new location
