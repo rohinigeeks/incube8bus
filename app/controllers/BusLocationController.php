@@ -66,13 +66,13 @@ class BusLocationController extends \BaseController {
             Cache::add("Location-" . $registration, $blBusLocation, $expiresAt);
             
             //To save querying the database for registration list each time bus location is fetched from the API
-            $redis->hset('registration', $registration, $registration);
+            //$redis->hset('registration', $registration, $registration);
         }
         
         //Save to the DB
         $dbBusLocation->save();
         
-        return Response::json(array('error' => false,'BusLocations' => $dbBusLocations->toArray()),200);
+        return Response::json(array('error' => false,'BusLocations' => $dbBusLocation->toArray()),200);
     }
 
 
@@ -91,10 +91,13 @@ class BusLocationController extends \BaseController {
         $userLocation                       = new LatLng($latitude, $longitude);
         
         //Use Google Maps API to find all the bus locations at a specific distance the user
-        $registrations                      = $redis->getall('registration');
+        //$registrations                    = $redis->getall('registration');
         
-        foreach($registrations as $registrationKey=>$registrationValue)
+        $DBBuses                            = DBBus::all();
+        
+        foreach($DBBuses as $DBBus)
         {
+            $registrationValue              = $DBBus->registration;
             if(Cache::has('Location-' . $registrationValue))
             {
                 $blBusLocation              = Cache::get('Location-' . $registrationValue);
