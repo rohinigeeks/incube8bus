@@ -2,6 +2,17 @@
 
 class BaseController extends Controller {
 
+	protected $userLatitude;
+	protected $userLongitude;
+
+	public function __construct()
+	{
+		if (Input::has('latitude'))
+			$this->userLatitude = Input::get('latitude');
+			
+		if (Input::has('longitude'))
+			$this->userLongitude = Input::get('longitude');
+	}
 	/**
 	 * Setup the layout used by the controller.
 	 *
@@ -14,5 +25,7 @@ class BaseController extends Controller {
 			$this->layout = View::make($this->layout);
 		}
 	}
+	
+
 
 }

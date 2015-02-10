@@ -22,10 +22,12 @@ Route::get('/',array('as' => 'Home', function()
 | Commute Routes
 |--------------------------------------------------------------------------
 */
-Route::get('View', array('as'=>'View', function()
-{
-	return View::make('pages.view');
-}));
+//Route::get('View', array('as'=>'View', function()
+//{
+//	return View::make('pages.view');
+//}));
+
+Route::get('View', array('as'=>'View', 'uses' => 'ViewController@index'));
 
 /*
 |--------------------------------------------------------------------------
@@ -63,17 +65,19 @@ Route::post('Bus', array('as' => 'addBus', 'uses' => 'BusController@store'));
 | Bus Location Routes
 |--------------------------------------------------------------------------
 */
-Route::get('BusLocation', array('as'=>'BusLocation', function()
-{
-	return View::make('pages.Admin.BusLocation');
-}));
+Route::get('BusLocation/{latitude}/{longitude}', array('as'=>'BusLocation', 'uses' => 'BusLocationController@index'));
 
 //Route::post('BusLocation', array('as' => 'addBusLocation', 'uses' => 'BusLocationController@store'));
 
 Route::post('BusLocation/{registration}/{latitude}/{longitude}/{timestamp}', array('as' => 'postBusLocation', 'uses' => 'BusLocationController@store'));
 
 // Route group for API versioning
-Route::group(array('prefix' => 'api/v1', 'before' => 'auth.basic'), function()
+//Route::group(array('prefix' => 'api/v1', 'before' => 'auth.basic'), function()
+//{
+//	Route::resource('BusLocation', 'BusLocationController');
+//});
+
+Route::group(array('prefix' => 'api/v1'), function()
 {
 	Route::resource('BusLocation', 'BusLocationController');
 });

@@ -1,6 +1,7 @@
 <?php
 
 use Carbon\Carbon;
+
 class BusLocationController extends \BaseController {
 
     /* -------------------------------------------------------------------------
@@ -16,7 +17,55 @@ class BusLocationController extends \BaseController {
      */
     public function index()
     {
-            //
+         //$latitude                           = Input::get('latitude');
+        //$longitude                          = Input::get('longitude');
+        
+        //From BaseController
+        $latitude                           = $this->userLatitude;
+        $longitude                          = $this->userLongitude;
+        
+        $redis                              = Redis::connection();
+        
+        $arrayLocations                     = array();
+        
+        $userLocation                       = new LatLng($latitude, $longitude);
+        
+        //Use Google Maps API to find all the bus locations at a specific distance the user
+        //$registrations                    = $redis->getall('registration');
+        
+        $DBBuses                            = DBBus::all();
+        
+        /*foreach($DBBuses as $DBBus)
+        {
+            $registrationValue              = $DBBus->registration;
+            echo $registrationValue;
+            if(Cache::has('Location-' . $registrationValue))
+            {
+                $blBusLocation              = Cache::get('Location-' . $registrationValue);
+                $busLatitude                = $blBusLocation->getLatitude();
+                $busLongitude               = $blBusLocation->getLongitude();
+                
+                $busLocationInLatLng        = new LatLng($busLatitude, $busLongitude);
+                
+                $distance                   = SphericalGeometry::computeDistanceBetween($userLocation, $busLocationInLatLong);
+                if($distance <= MAX_BUS_VIEW_RADIUS)
+                {
+                    $arrayLocations = array($busLatitude, $busLongitude);
+                }
+            }
+        }*/
+        
+        //$busLocations = DBBusLocation::whereRaw('timestamp = (select registration, max(timestamp) as Max from dbbuslocations group by registration) tm ')->get();
+        
+        $busLocations = DB::Select("SELECT t.* FROM dbbuslocations t
+                                    INNER JOIN (
+                                        SELECT registration, max(timestamp) AS Max FROM dbbuslocations
+                                        GROUP BY registration
+                                        ) tm
+                                        ON t.registration = tm.registration
+                                        AND t.timestamp = tm.Max;");
+        
+        return Response::json(array('error' => false,'BusLocations' => $busLocations),200);
     }
 
 
@@ -82,8 +131,15 @@ class BusLocationController extends \BaseController {
      * @param  int  $id
      * @return Response
      */
-    public function show($latitude, $longitude)
+    public function show()
     {
+        //$latitude                           = Input::get('latitude');
+        //$longitude                          = Input::get('longitude');
+        
+        //From BaseController
+        $latitude                           = $this->userLatitude;
+        $longitude                          = $this->userLongitude;
+        
         $redis                              = Redis::connection();
         
         $arrayLocations                     = array();
@@ -93,28 +149,32 @@ class BusLocationController extends \BaseController {
         //Use Google Maps API to find all the bus locations at a specific distance the user
         //$registrations                    = $redis->getall('registration');
         
-        $DBBuses                            = DBBus::all();
+        //$DBBuses                            = DBBus::all();
+        //
+        //foreach($DBBuses as $DBBus)
+        //{
+        //    $registrationValue              = $DBBus->registration;
+        //    echo $registrationValue;
+        //    if(Cache::has('Location-' . $registrationValue))
+        //    {
+        //        $blBusLocation              = Cache::get('Location-' . $registrationValue);
+        //        $busLatitude                = $blBusLocation->getLatitude();
+        //        $busLongitude               = $blBusLocation->getLongitude();
+        //        
+        //        $busLocationInLatLng        = new LatLong($busLatitude, $busLongitude);
+        //        
+        //        $distance                   = SphericalGeometry::computeDistanceBetween($userLocation, $busLocationInLatLong);
+        //        if($distance <= MAX_BUS_VIEW_RADIUS)
+        //        {
+        //            $arrayLocations[$registrationValue] = array($busLatitude, $busLongitude);
+        //        }
+        //    }
+        //}
         
-        foreach($DBBuses as $DBBus)
-        {
-            $registrationValue              = $DBBus->registration;
-            if(Cache::has('Location-' . $registrationValue))
-            {
-                $blBusLocation              = Cache::get('Location-' . $registrationValue);
-                $busLatitude                = $blBusLocation->getLatitude();
-                $busLongitude               = $blBusLocation->getLongitude();
-                
-                $busLocationInLatLng        = new LatLong($busLatitude, $busLongitude);
-                
-                $distance                   = SphericalGeometry::computeDistanceBetween($userLocation, $busLocationInLatLong);
-                if($distance <= MAX_BUS_VIEW_RADIUS)
-                {
-                    $arrayLocations[$registrationValue] = array($busLatitude, $busLongitude);
-                }
-            }
-        }
+        //$busLocations = DBBusLocation::whereRaw('timestamp = (select registration, max("timestamp") from DBBusLocation group by registration)')->get();
+        $busLocations = DBBusLocation::all();
         
-        return Response::json(array('error' => false,'BusLocations' => $arrayLocations),200);
+        return Response::json(array('error' => false,'BusLocations' => $busLocations->toArray()),200);
     }
 
 
