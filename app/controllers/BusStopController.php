@@ -98,33 +98,24 @@ class BusStopController extends \BaseController {
 		    foreach ($elements as $element)
 		    {
 			// Get the duration
-			$duration               = $element->getDuration();
+			$duration               = $element->getDuration()->getText();
+					
 			$arrayTempDurations[]   = array('registration' => $registrationValue, 'duration' => $duration, 'timestamp' => $busTimestamp);
 		    }
 		    
-		    usort($arrayTempDurations, "cmp");
+		    usort($arrayTempDurations, array($this,"cmp"));
 		    
 		    $results = DB::select(
-			DB::raw("
-				IF EXISTS
-				(
-				SELECT 	dbbusstops.id 
-				    FROM dbbusstops 
-				    JOIN dbbusroutes	ON dbbusstops.id = dbbusroutes.dbbusstop_id
-				    JOIN dbbusservices 	ON dbbusroutes.busRouteName = dbbusservices.busRouteName
-				    JOIN dbbus		ON dbbusservices.id = dbbus.dbbusservice_id
-				    WHERE 		dbbus.registration = :param1
-				    AND			dbbusstops.id = :param2
-				)
-				"),
+			"SELECT dbbusstops.id FROM dbbusstops JOIN dbbusroutes	ON dbbusstops.id = dbbusroutes.dbbusstop_id JOIN dbbusservices 	ON dbbusroutes.busRouteName = dbbusservices.busRouteName JOIN dbbus ON dbbusservices.id = dbbus.dbbusservice_id WHERE dbbus.registration = :param1 AND dbbusstops.id = :param2",
 			array(
 			'param1' => $registrationValue,
-			'param2' => $busstop_id
+			'param2' => $id
 		    ));
 		    
-		    if($results)
+		    //var_dump($results);
+		    if($results[0] !=null)
 		    {
-			$arrayDurations[$registrationValue] = $arrayTempDurations[0]['duration'];
+			$arrayDurations[] = array('registration' => $registrationValue, 'duration' => $arrayTempDurations[0]['duration'], 'timestamp' => $arrayTempDurations[0]['timestamp']);
 		    }
 		}
                 
@@ -132,6 +123,20 @@ class BusStopController extends \BaseController {
             
             return Response::json(array('error' => false,'BusDurations' => $arrayDurations),200);
 	}
+	
+	function cmp($a, $b)
+        {
+            $epsilon = 0.00001;
+
+            if(abs($a["duration"]-$b["duration"]) < $epsilon)
+            {
+                return 1;
+            }
+            else
+            {
+                return -1;
+            }
+        }
 
 
 	/**
@@ -239,19 +244,7 @@ class BusStopController extends \BaseController {
 	
 	
         
-        function cmp($a, $b)
-        {
-            $epsilon = 0.00001;
-
-            if(abs($a["duration"]-$b["duration"]) < $epsilon)
-            {
-                return 1;
-            }
-            else
-            {
-                return -1;
-            }
-        }
+        
 
 	/**
 	 * Show the form for editing the specified resource.

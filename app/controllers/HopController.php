@@ -36,12 +36,15 @@ class HopController extends \BaseController {
                    
             $arrResult                  = null;
             
-	    $busStopId                  = Request::get('busstopid');
+	    $busStopId                  = Request::get('busstop');
             
             $client                     = new GuzzleHttp\Client(['base_url' => 'http://ec2-52-0-153-33.compute-1.amazonaws.com']);
-            $result                     = $client->get('/api/v1/BusLocation');
+            $result                     = $client->get('/api/v1/BusStop/' . $busStopId);
             
             $arrResult                  = $result->json();
+            
+            //var_dump($result->json());
+            
         
             View::share('arrResult', $arrResult);
             
