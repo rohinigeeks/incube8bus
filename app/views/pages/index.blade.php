@@ -43,7 +43,7 @@
                 <div class="col-md-4">
 			<h3>Hop</h3>
 			<p>Getting to know the ETA of a bus service is easy.</p>
-			<p><a href="#">Know when next bus is arriving.</a></p>
+			<p><a href="{{ URL::route("Hop", null) }}">Know when next bus is arriving.</a></p>
 		  </div>
 		  <div class="col-md-4">
 			<h3>Trust and Safety</h3>

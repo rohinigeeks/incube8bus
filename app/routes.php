@@ -31,6 +31,16 @@ Route::get('View', array('as'=>'View', 'uses' => 'ViewController@index'));
 
 /*
 |--------------------------------------------------------------------------
+| Hop Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::get('Hop', array('as'=>'Hop', 'uses' => 'HopController@index'));
+
+Route::post('Hop', array('as'=>'postHop', 'uses' => 'HopController@store'));
+
+/*
+|--------------------------------------------------------------------------
 | Login Routes
 |--------------------------------------------------------------------------
 */
@@ -135,18 +145,19 @@ Route::post('BusService', array('as' => 'addBusService', 'uses' => 'BusServiceCo
 | Bus Stop Routes
 |--------------------------------------------------------------------------
 */
-//Route::get('BusStop', array('as'=>'BusStop', function()
-//{
-//	return View::make('pages.Admin.BusStop');
-//}));
 
-Route::post('BusStop', array('as' => 'addBusStop', 'uses' => 'BusController@store'));
-
-Route::get('BusStop/{latitude}/{longitude}', array('as' => 'getETAForBusStop', 'uses' => 'BusStopController@show'));
+Route::get('BusStop/{id}', array('as' => 'getETAForBusStop', 'uses' => 'BusStopController@index'));
 
 
 // Route group for API versioning
+/*
 Route::group(array('prefix' => 'api/v1', 'before' => 'auth.basic'), function()
+{
+	Route::resource('BusStop', 'BusStopController');
+});
+*/
+
+Route::group(array('prefix' => 'api/v1'), function()
 {
 	Route::resource('BusStop', 'BusStopController');
 });

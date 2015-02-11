@@ -12,7 +12,7 @@ class BusStopController extends \BaseController {
         /* -------------------------------------------------------------------------
          * Const
          */
-        const MAX_BUS_VIEW_RADIUS                     = 10000;
+        const MAX_BUS_VIEW_RADIUS                     = 100000;
 	
         /**
 	 * Display a listing of the resource.
@@ -21,7 +21,116 @@ class BusStopController extends \BaseController {
 	 */
 	public function index()
 	{
-		//
+	    
+	}
+	
+	/**
+	 * Display the specified resource.
+	 *
+	 * @param  int  $id
+	 * @return Response
+	 */
+	public function show($id)
+	{
+	    $arrayLocations                     = array();
+            $arrayDurations                     = array();
+            $arrayTempDurations                 = array();
+            
+            
+            
+            $request 				= new DistanceMatrixRequest();
+	    $distanceMatrix			= new DistanceMatrix(new CurlHttpAdapter());
+	    
+	    $busStop				= DBBusStop::find($id);
+	    $latitude				= $busStop->latitude;
+	    $longitude				= $busStop->longitude;
+	    
+	    $busStopLocation                    = new LatLng($latitude, $longitude);
+
+            // Set your origins
+            $request->setOrigins(array(new Coordinate($latitude, $longitude, true)));
+            
+            $request->setAvoidHighways(true);
+            $request->setAvoidTolls(true);
+            
+            $request->setRegion('us');
+            $request->setLanguage('en');
+            $request->setTravelMode(TravelMode::DRIVING);
+            $request->setUnitSystem(UnitSystem::METRIC);
+            $request->setSensor(false);
+            
+            
+	    $busLocations 		    = DB::Select("SELECT t.* FROM dbbuslocations t
+						    INNER JOIN (
+							SELECT registration, max(timestamp) AS Max FROM dbbuslocations
+							GROUP BY registration
+							) tm
+							ON t.registration = tm.registration
+							AND t.timestamp = tm.Max;");
+    
+            foreach($busLocations as $busLocation)
+            {
+		$registrationValue	    = $busLocation->registration;
+		$busLatitude                = $busLocation->latitude;
+		$busLongitude               = $busLocation->longitude;
+		$busTimestamp               = $busLocation->timestamp;
+
+		
+		$busLocationInLatLng        = new LatLng($busLatitude, $busLongitude);
+		
+		$distance                   = SphericalGeometry::computeDistanceBetween($busStopLocation, $busLocationInLatLng);
+		if($distance <= self::MAX_BUS_VIEW_RADIUS)
+		{
+		    //$arrayLocations[$registrationValue] = array($busLatitude, $busLongitude);
+		    
+		    // Set your destinations
+		    $request->setDestinations(array(new Coordinate($busLatitude, $busLongitude, true)));
+		    
+		    $response               = $distanceMatrix->process($request);
+	
+		    $rows                   = $response->getRows();
+		    
+		    // Get the rows
+		    foreach ($rows as $row)
+		    {
+			$elements           = $row->getElements();
+		    }
+		    foreach ($elements as $element)
+		    {
+			// Get the duration
+			$duration               = $element->getDuration();
+			$arrayTempDurations[]   = array('registration' => $registrationValue, 'duration' => $duration, 'timestamp' => $busTimestamp);
+		    }
+		    
+		    usort($arrayTempDurations, "cmp");
+		    
+		    $results = DB::select(
+			DB::raw("
+				IF EXISTS
+				(
+				SELECT 	dbbusstops.id 
+				    FROM dbbusstops 
+				    JOIN dbbusroutes	ON dbbusstops.id = dbbusroutes.dbbusstop_id
+				    JOIN dbbusservices 	ON dbbusroutes.busRouteName = dbbusservices.busRouteName
+				    JOIN dbbus		ON dbbusservices.id = dbbus.dbbusservice_id
+				    WHERE 		dbbus.registration = :param1
+				    AND			dbbusstops.id = :param2
+				)
+				"),
+			array(
+			'param1' => $registrationValue,
+			'param2' => $busstop_id
+		    ));
+		    
+		    if($results)
+		    {
+			$arrayDurations[$registrationValue] = $arrayTempDurations[0]['duration'];
+		    }
+		}
+                
+            }
+            
+            return Response::json(array('error' => false,'BusDurations' => $arrayDurations),200);
 	}
 
 
@@ -52,7 +161,7 @@ class BusStopController extends \BaseController {
 	 *
 	 * @param  int  $id
 	 * @return Response
-	 */
+	 
 	public function show($latitude, $longitude)
 	{
 	    $redis                              = Redis::connection();
@@ -126,6 +235,9 @@ class BusStopController extends \BaseController {
             
             return Response::json(array('error' => false,'BusDurations' => $arrayDurations),200);
 	}
+	*/
+	
+	
         
         function cmp($a, $b)
         {

@@ -2,7 +2,7 @@
         <ul class="pull-left">
           <li><a href="{{ URL::route('Home', null) }}">Home</a></li>  
           <li><a href="{{ URL::route('View', null) }}">Commute</a></li>
-          <li><a href="{{ URL::route('Home', null) }}">Hop</a></li>
+          <li><a href="{{ URL::route('Hop', null) }}">Hop</a></li>
         </ul>
         <ul class="pull-right">
           <li>
